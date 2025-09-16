@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Check-in – Thales0</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <main class="container">
+    <h1>Check-in – Thales0</h1>
+
+    <section class="controls">
+      <button id="btnStart">Iniciar Leitura</button>
+      <button id="btnStop" disabled>Parar</button>
+      <select id="cameraSelect"></select>
+    </section>
+
+    <section class="preview card">
+      <div id="reader"></div>
+    </section>
+
+    <section class="controls">
+      <input type="file" id="file" accept="image/jpeg,image/png,image/jpg" capture="environment" />
+      <button id="btnScanFile">Ler imagem</button>
+      <button id="btnHardReset">Zerar (forçado)</button>
+      <button id="btnExport">Backup (.json)</button>
+      <label class="btn"><input type="file" id="imp" accept="application/json" style="display:none"> <span id="impBtn" style="padding:8px 12px;border:1px solid #374151;background:#1f2937;border-radius:10px;cursor:pointer;">Restaurar (.json)</span></label>
+    </section>
+
+    <section class="manual card">
+      <h2>Entrada manual</h2>
+      <input id="manualCode" type="text" placeholder="Digite ou cole o código" />
+      <button id="btnManual">Validar</button>
+    </section>
+
+    <section class="status">
+      <div id="statusBadge" class="badge">Aguardando…</div>
+      <div id="guestInfo" class="guest"></div>
+    </section>
+
+    <footer>
+      <small>Veja o <a href="dashboard.html">Painel (neste aparelho)</a></small>
+    </footer>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+:root { --ok:#16a34a; --warn:#f59e0b; --err:#dc2626; --bg:#0b0f14; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system, system-ui, Segoe UI, Roboto, Ubuntu; background:#0b0f14; color:#e5e7eb; }
+.container { max-width:1080px; margin:0 auto; padding:24px; }
+h1 { margin:0 0 16px; font-size:28px; }
+.controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.controls select, .controls button, .controls input { padding:8px 12px; border:1px solid #374151; background:#1f2937; color:#e5e7eb; border-radius:10px; }
+.controls button { cursor:pointer; }
+.preview { background:#111827; border:1px solid #1f2937; border-radius:16px; padding:16px; }
+#reader { width: 100%; max-width: 420px; background:#000; border-radius:12px; margin: 0 auto; }
+.status { margin:16px 0; }
+.badge { display:inline-block; padding:8px 12px; border-radius:999px; background:#374151; }
+.badge.ok { background:#16a34a; color:#052e16; font-weight:700; }
+.badge.warn { background:#f59e0b; color:#3b2600; font-weight:700; }
+.badge.err { background:#dc2626; color:#450a0a; font-weight:700; }
+.guest { margin-top:8px; font-size:18px; }
+.manual { margin-top:24px; background:#0f172a; border:1px solid #1f2937; padding:16px; border-radius:16px; }
+input#manualCode { width:320px; max-width:100%; padding:10px 12px; border:1px solid #374151; background:#1f2937; color:#e5e7eb; border-radius:10px; }
+footer { opacity:.7; margin-top:24px; text-align:center; }
+.table { width:100%; border-collapse: collapse; margin-top:12px; font-size:14px; }
+.table th, .table td { border-bottom:1px solid #333; padding:8px 6px; text-align:left; }
+.table th { color:#cbd5e1; font-weight:600; }
+.toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.card { background:#0f172a; border:1px solid #1f2937; border-radius:16px; padding:16px; margin:12px 0; }
+.kpi { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; }
+.kpi .item { background:#111827; border:1px solid #1f2937; border-radius:12px; padding:12px; }
+.kpi .value { font-size:24px; font-weight:700; }
+.kpi .label { font-size:12px; color:#9ca3af; }

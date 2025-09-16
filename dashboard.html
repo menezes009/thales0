@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel – Thales0</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Painel (neste aparelho)</h1>
+
+    <section class="kpi">
+      <div class="item">
+        <div class="value" id="kpiTotal">0</div>
+        <div class="label">Total de códigos</div>
+      </div>
+      <div class="item">
+        <div class="value" id="kpiUsed">0</div>
+        <div class="label">Check-ins (neste aparelho)</div>
+      </div>
+      <div class="item">
+        <div class="value" id="kpiLeft">0</div>
+        <div class="label">Restantes (neste aparelho)</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="filter" type="text" placeholder="Filtrar por nome ou código" />
+        <button id="btnExport">Exportar CSV</button>
+        <button id="btnExportJson">Backup (.json)</button>
+        <label class="btn"><input type="file" id="imp" accept="application/json" style="display:none"> <span id="impBtn" style="padding:8px 12px;border:1px solid #374151;background:#1f2937;border-radius:10px;cursor:pointer;">Restaurar (.json)</span></label>
+        <a href="index.html">Abrir scanner</a>
+        <button id="btnHardReset">Zerar (forçado)</button>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Quando</th>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Origem</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <small class="muted">Mostra dados do <em>localStorage</em> deste aparelho.</small>
+    </section>
+  </main>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
