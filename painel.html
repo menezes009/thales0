@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel Universal – Thales0</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .diag { background:#0f172a; border:1px solid #1f2937; border-radius:12px; padding:12px; margin-top:12px; font-size:13px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+  .kpi { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-top:12px; }
+  .kpi .item { background:#111827; border:1px solid #1f2937; border-radius:12px; padding:12px; }
+  .kpi .value { font-size:24px; font-weight:700; }
+  .kpi .label { font-size:12px; color:#9ca3af; }
+  .toolbar button,a { padding:8px 12px; border:1px solid #374151; background:#1f2937; color:#e5e7eb; border-radius:10px; text-decoration:none; }
+</style>
+</head>
+<body>
+  <main class="container">
+    <h1>Painel Universal (neste aparelho) – Thales0</h1>
+
+    <section class="kpi">
+      <div class="item">
+        <div class="value" id="kpiTotal">0</div>
+        <div class="label">Total de códigos (data.json)</div>
+      </div>
+      <div class="item">
+        <div class="value" id="kpiUsed">0</div>
+        <div class="label">Check-ins (neste aparelho)</div>
+      </div>
+      <div class="item">
+        <div class="value" id="kpiLeft">0</div>
+        <div class="label">Restantes</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button id="btnRefresh">Atualizar</button>
+        <input id="filter" type="text" placeholder="Filtrar por nome ou código" />
+        <button id="btnExport">Exportar CSV</button>
+        <a href="index.html">Abrir scanner</a>
+      </div>
+
+      <table class="table" style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Quando</th>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Origem</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="diag">
+        <strong>Diagnóstico</strong>
+        <div id="diag"></div>
+      </div>
+    </section>
+  </main>
+
+<script>
+// ======== Painel Universal (compatível com várias versões do scanner) ========
+const DEFAULT_PREFIXES = ['qr_v5','qr_v4','qr_v3','qr'];
+const tbody = document.getElementById('tbody');
+const kpiTotal = document.getElementById('kpiTotal');
+const kpiUsed = document.getElementById('kpiUsed');
+const kpiLeft = document.getElementById('kpiLeft');
+const filterInput = document.getElementById('filter');
+const btnRefresh = document.getElementById('btnRefresh');
+const btnExport = document.getElementById('btnExport');
+const diag = document.getElementById('diag');
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;' }[m])); }
+
+async function getCodes(){
+  try{
+    const res = await fetch('data.json?_=' + Date.now());
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      return data.map(r => String(r.codigo||'').trim()).filter(Boolean);
+    }
+    return Object.keys(data || {});
+  }catch(e){ return []; }
+}
+
+function detectKeys(){
+  const keys = Object.keys(localStorage || {});
+  const usedKeys = keys.filter(k => /_used$/.test(k));
+  const logKeys  = keys.filter(k => /_checkins$/.test(k));
+  let chosenUsed = null, chosenLog = null, chosenPrefix = null;
+  for (const pref of DEFAULT_PREFIXES) {
+    const u = `${pref}_used`;
+    const l = `${pref}_checkins`;
+    if (keys.includes(u) || keys.includes(l)) {
+      chosenUsed = keys.includes(u) ? u : null;
+      chosenLog  = keys.includes(l) ? l : null;
+      chosenPrefix = pref;
+      break;
+    }
+  }
+  if (!chosenPrefix) {
+    if (usedKeys.length) { chosenUsed = usedKeys[0]; chosenPrefix = usedKeys[0].replace(/_used$/,''); }
+    if (logKeys.length)  { chosenLog  = logKeys[0];  chosenPrefix = chosenPrefix || logKeys[0].replace(/_checkins$/,''); }
+  }
+  return { chosenPrefix, chosenUsed, chosenLog, allUsed: usedKeys, allLogs: logKeys };
+}
+
+function readUsedSet(key){ try{ const arr = JSON.parse(localStorage.getItem(key) || '[]'); return new Set(Array.isArray(arr) ? arr : []); }catch(e){ return new Set(); } }
+function readLogs(key){ try{ const arr = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(arr) ? arr : []; }catch(e){ return []; } }
+
+function renderTable(arr){
+  const q = (filterInput.value || '').toLowerCase();
+  const rows = (arr||[]).slice()
+    .sort((a,b)=>(b.at||0)-(a.at||0))
+    .filter(c => !q || (String(c.code||'').toLowerCase().includes(q) || String(c.name||'').toLowerCase().includes(q)))
+    .map(c => {
+      const when = c.at ? new Date(c.at).toLocaleString() : '-';
+      return `<tr>
+        <td>${when}</td>
+        <td>${escapeHtml(c.code||'')}</td>
+        <td>${escapeHtml(c.name||'')}</td>
+        <td>${escapeHtml(c.deviceId||'local')}</td>
+      </tr>`;
+    }).join('');
+  tbody.innerHTML = rows || '<tr><td colspan="4"><em>Nenhum check-in neste aparelho.</em></td></tr>';
+}
+
+async function refresh(){
+  const codes = await getCodes();
+  const total = codes.length;
+  const info = detectKeys();
+  const used = info.chosenUsed ? readUsedSet(info.chosenUsed) : new Set();
+  const logs = info.chosenLog  ? readLogs(info.chosenLog) : [];
+  const usados = codes.filter(c => used.has(c)).length;
+  kpiTotal.textContent = total;
+  kpiUsed.textContent = usados;
+  kpiLeft.textContent = Math.max(0, total - usados);
+  renderTable(logs);
+  diag.innerHTML = `
+    <div class="mono">
+      <div><strong>data.json</strong>: ${total} códigos</div>
+      <div><strong>Prefixo detectado</strong>: ${escapeHtml(info.chosenPrefix || '(nenhum)')}</div>
+      <div><strong>Chave usados</strong>: ${escapeHtml(info.chosenUsed || '(nenhuma)')} → ${used.size} itens</div>
+      <div><strong>Chave logs</strong>: ${escapeHtml(info.chosenLog || '(nenhuma)')} → ${logs.length} itens</div>
+      <div><strong>Todas *_used</strong>: ${escapeHtml((info.allUsed||[]).join(', ') || '(nenhuma)')}</div>
+      <div><strong>Todas *_checkins</strong>: ${escapeHtml((info.allLogs||[]).join(', ') || '(nenhuma)')}</div>
+    </div>`;
+}
+
+btnRefresh.addEventListener('click', refresh);
+filterInput.addEventListener('input', refresh);
+btnExport.addEventListener('click', () => {
+  const info = detectKeys();
+  const logs = info.chosenLog ? readLogs(info.chosenLog) : [];
+  const header = ['quando','codigo','nome','origem'];
+  const rows = logs.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(c => [
+    c.at ? new Date(c.at).toISOString() : '',
+    (c.code||''), (c.name||''), (c.deviceId||'local')
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'checkins-local.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+});
+refresh();
+</script>
+</body>
+</html>
